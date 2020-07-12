@@ -153,7 +153,7 @@ class SetNumber extends Component {
             liffId: "1654394004-N82p5wP9"
         }).then(() => {
             if (!liff.isLoggedIn()) {
-                liff.login({ redirectUri: ("https://3000-post-setting.cardbo.info/") });
+                liff.login({ redirectUri: ("https://3000postsetting.cardbo.info/") });
                 console.log("not logged in")
             }
         }).catch(function (error) {
