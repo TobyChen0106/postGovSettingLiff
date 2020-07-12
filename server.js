@@ -13,7 +13,7 @@ const mongoose = require('mongoose');
 // const usrPswd = "dbforcardbo"
 // mongoURL = `mongodb+srv://${usrName}:${usrPswd}@cluster0-gfwld.mongodb.net/${dbName}?retryWrites=true&w=majority`
 
-const dbName = "dbCardbo"
+const dbName = "dbPostGov"
 const usrName = "cardbo"
 const usrPswd = "69541"
 mongoURL = `mongodb+srv://${usrName}:${usrPswd}@cardbo-br3ga.gcp.mongodb.net/${dbName}?retryWrites=true&w=majority`

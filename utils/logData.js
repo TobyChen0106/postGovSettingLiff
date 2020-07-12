@@ -3,6 +3,7 @@ const PostOffice = require('../src/models/PostOffice');
 const Password = require('../src/models/Password');
 const mongoose = require('mongoose');
 const dbName = "dbPostGov"
+// const dbName = "dbCardbo"
 const usrName = "cardbo"
 const usrPswd = "69541"
 mongoURL = `mongodb+srv://${usrName}:${usrPswd}@cardbo-br3ga.gcp.mongodb.net/${dbName}?retryWrites=true&w=majority`
@@ -39,23 +40,18 @@ const file_path = "./PostData.json";
 
 const postData = require(file_path);
 
-for (var i = 0; i < postData.length; ++i) {
-    var new_password = new Password();
-    new_password.storeNm = postData[i].storeNm
-    new_password.storeCd = postData[i].storeCd
-    new_password.password = postData[i].storeCd
-    new_password.save();
-}
 
-// PostOffice.find({}, (err, data) => {
-//     if (err) {
-//         console.log(err);
-//     }
-//     else if (!data) {
-//         console.log("[ERROR] EMPTY DATA!");
-//     } else {
-//         console.log(data.length)
-        
-//         fs.writeFile(file_path, JSON.stringify(data), 'utf8', () => console.log(`successfully dump offer to ${file_path}`))
-//     }
-// })
+
+PostOffice.find({}, (err, data) => {
+    if (err) {
+        console.log(err);
+    }
+    else if (!data) {
+        console.log("[ERROR] EMPTY DATA!");
+    } else {
+
+    }
+})
+
+
+        // fs.writeFile(file_path, JSON.stringify(data), 'utf8', () => console.log(`successfully dump offer to ${file_path}`))

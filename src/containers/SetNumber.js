@@ -141,8 +141,8 @@ class SetNumber extends Component {
             openModal: false,
             lineID: undefined,
 
-            postNm: "網際網路錯誤",
-            postCd: "網際網路錯誤",
+            storeNm: "網際網路錯誤",
+            storeCd: "網際網路錯誤",
             inputBuffet: ""
         }
         this.modalTextRef = React.createRef();
@@ -168,79 +168,92 @@ class SetNumber extends Component {
                 this.createNotification("error", "無法載入資料", "請確認網路連線狀況");
             } else {
                 console.log(profile.userId);
-                this.setState({
-                    lineID: profile.userId,
-                });
-            }
-        }).then(() => {
-            fetch('/api/getData', {
-                method: 'post',
-                body: JSON.stringify({ lineID: this.state.lineID })
-            }).catch(function (error) {
-                console.log("[Error] " + error);
-            }).then(
-                res => {
-                    if (res.ok) {
-                        return res.json()
-                    }
-                    else {
-                        this.createNotification("error", "無法載入資料", "請確認網路連線狀況");
-                        return null;
-                    }
+                if (profile.userId) {
+                    fetch('/api/getData', {
+                        method: 'POST',
+                        body: JSON.stringify({ lineID: profile.userId }),
+                        headers: new Headers({
+                            'Content-Type': 'application/json'
+                        })
+                    }).catch(function (error) {
+                        console.log("[Error] " + error);
+                    }).then(
+                        res => {
+                            if (res.ok) {
+                                console.log("ok")
+                                return res.json()
+                            }
+                            else {
+                                this.createNotification("error", "無法載入資料", "請確認網路連線狀況");
+                                return null;
+                            }
+                        }
+                    ).then((data) => {
+                        console.log(data)
+                        if (data) {
+                            var number_plate_updateTime = new Date(data.number_plate_updateTime);
+                            this.setState(
+                                {
+                                    lineID: profile.userId,
+                                    storeNm: data.storeNm,
+                                    storeCd: data.storeCd,
+                                    number_plate_updateTime: number_plate_updateTime,
+                                    total: data.number_plate_total,
+                                    now: data.number_plate_now,
+                                    loading: false
+                                }
+                            );
+                        } else {
+                            this.createNotification("error", "無法載入資料", "請確認網路連線狀況");
+                            this.setState(
+                                { lineID: profile.userId, loading: false }
+                            );
+                        }
+                    });
+                } else {
+                    alert("無法取得使用者ID!");
+                    this.setState(
+                        { loading: false }
+                    );
                 }
-            )
-        }).then((data) => {
-            if (data) {
-                var number_plate_updateTime = new Date(data.number_plate_updateTime);
-                this.setState(
-                    {
-                        storeNm: data.storeNm,
-                        storeCd: data.storeCd,
-                        number_plate_updateTime: number_plate_updateTime,
-                        total: data.number_plate_total,
-                        now: data.number_plate_now,
-                        loading: false
-                    }
-                );
-            } else {
-                this.setState(
-                    { loading: false }
-                );
             }
-        });
+        })
     }
 
     componentDidMount = () => {
-        setInterval(() => {
-            if (!this.state.loading) {
-                fetch('/api/getData', {
-                    method: 'post',
-                    body: JSON.stringify({ lineID: this.state.lineID })
-                }).catch(function (error) {
-                    console.log("[Error] " + error);
-                }).then(
-                    res => {
-                        if (res.ok) {
-                            return res.json()
-                        }
-                        else {
-                            return null;
-                        }
-                    }
-                ).then((data) => {
-                    if (data) {
-                        var number_plate_updateTime = new Date(data.number_plate_updateTime);
-                        this.setState(
-                            {
-                                number_plate_updateTime: number_plate_updateTime,
-                                total: data.number_plate_total,
-                                now: data.number_plate_now,
-                            }
-                        );
-                    }
-                });
-            }
-        }, 500);
+        // setInterval(() => {
+        //     if (this.state.lineID) {
+        //         fetch('/api/getData', {
+        //             method: 'POST',
+        //             body: JSON.stringify({ lineID: this.state.lineID }),
+        //             headers: new Headers({
+        //                 'Content-Type': 'application/json'
+        //             })
+        //         }).catch(function (error) {
+        //             console.log("[Error] " + error);
+        //         }).then(
+        //             res => {
+        //                 if (res.ok) {
+        //                     return res.json()
+        //                 }
+        //                 else {
+        //                     return null;
+        //                 }
+        //             }
+        //         ).then((data) => {
+        //             if (data) {
+        //                 var number_plate_updateTime = new Date(data.number_plate_updateTime);
+        //                 this.setState(
+        //                     {
+        //                         number_plate_updateTime: number_plate_updateTime,
+        //                         total: data.number_plate_total,
+        //                         now: data.number_plate_now,
+        //                     }
+        //                 );
+        //             }
+        //         });
+        //     }
+        // }, 1000);
     }
 
     createNotification = (type, title, message) => {
@@ -271,11 +284,11 @@ class SetNumber extends Component {
             var now = this.state.now;
             now = now + num;
             this.setState(
-                { now: now }, this.handleSave());
+                { now: now }, this.handleSave({ now: now }));
         } else if (this.state.focusedData === 1) {
             var total = this.state.total;
             total = total + num;
-            this.setState({ total: total }, this.handleSave());
+            this.setState({ total: total }, this.handleSave({ total: total }));
         }
     }
 
@@ -284,7 +297,7 @@ class SetNumber extends Component {
     }
 
     handleCloseModal = () => {
-        this.setState({ openModal: false })
+        this.setState({ openModal: false, inputBuffet: null })
     }
 
     handleModalChange = (e) => {
@@ -293,62 +306,86 @@ class SetNumber extends Component {
 
     handleModalSave = () => {
         const newData = parseInt(this.state.inputBuffet);
-        if (!Number.isInteger(newData)) {
+        if (!this.state.inputBuffet || !Number.isInteger(newData)) {
             this.createNotification("error", "輸入非整數資料", "請確認輸入法");
         } else {
             this.handleCloseModal();
             if (this.state.focusedData === 0) {
-                var now = this.state.now;
-                now = this.state.inputBuffet;
                 this.setState(
-                    { now: now }, this.handleSave());
+                    { now: newData }, this.handleSave({ now: newData }));
             } else if (this.state.focusedData === 1) {
-                var total = this.state.total;
-                total = this.state.inputBuffet;
-                this.setState({ total: total }, this.handleSave());
+                this.setState({ total: newData }, this.handleSave({ total: newData }));
             }
         }
     }
 
-    handleSave = () => {
-        if (this.state.now || this.state.total) {
+    handleSave = (data) => {
+        if (data.now || data.total) {
             if (this.state.focusedData === 0) {
-                const now = this.state.now;
+                const now = data.now;
                 this.setState(
                     { now: now, loadingSetNow: true },
                     () => {
                         fetch('/api/setData', {
-                            method: 'post',
-                            body: JSON.stringify({ now: now, lineID: this.state.lineID })
+                            method: 'POST',
+                            body: JSON.stringify({ now: now, lineID: this.state.lineID }),
+                            headers: new Headers({
+                                'Content-Type': 'application/json'
+                            })
                         }).catch(function (error) {
                             console.log("[Error] " + error);
                         }).then(
                             res => {
-                                this.setState({ loadingSetNow: false });
-                                if (!res.ok) {
+                                if (res.ok) {
+                                    return res.json()
+                                }
+                                else {
+                                    return null;
+                                }
+                            }
+                        ).then((data) => {
+                            if (!data) {
+                                this.createNotification("error", "無法載入資料", "請確認網路連線狀況");
+                            } else {
+                                if (data.number_plate_now !== now) {
                                     this.createNotification("error", "無法載入資料", "請確認網路連線狀況");
                                 }
                             }
-                        )
+                            this.setState({ loadingSetNow: false });
+                        })
                     }
                 );
             } else if (this.state.focusedData === 1) {
-                const total = this.state.total;
+                const total = data.total;
                 this.setState({ total: total, loadingSetTotal: true },
                     () => {
                         fetch('/api/setData', {
-                            method: 'post',
-                            body: JSON.stringify({ total: total, lineID: this.state.lineID })
+                            method: 'POST',
+                            body: JSON.stringify({ total: total, lineID: this.state.lineID }),
+                            headers: new Headers({
+                                'Content-Type': 'application/json'
+                            })
                         }).catch(function (error) {
                             console.log("[Error] " + error);
                         }).then(
                             res => {
-                                this.setState({ loadingSetTotal: false });
-                                if (!res.ok) {
+                                if (res.ok) {
+                                    return res.json()
+                                }
+                                else {
+                                    return null;
+                                }
+                            }
+                        ).then((data) => {
+                            if (!data) {
+                                this.createNotification("error", "無法載入資料", "請確認網路連線狀況");
+                            } else {
+                                if (data.number_plate_total !== total) {
                                     this.createNotification("error", "無法載入資料", "請確認網路連線狀況");
                                 }
                             }
-                        )
+                            this.setState({ loadingSetTotal: false });
+                        })
                     }
                 );
             }
@@ -383,8 +420,8 @@ class SetNumber extends Component {
                                 <HelpIcon />
                             </IconButton>
                         }
-                        title={this.state.postNm}
-                        subheader={this.state.postCd}
+                        title={this.state.storeNm}
+                        subheader={this.state.storeCd}
                     />
                     <div className={classes.CardContent}>
                         <div className={classes.SettingHolder}>
