@@ -167,6 +167,7 @@ class SetNumber extends Component {
                 console.log("USER PROFILE ERROR!");
                 this.createNotification("error", "無法載入資料", "請確認網路連線狀況");
             } else {
+                console.log(profile.userId);
                 this.setState({
                     lineID: profile.userId,
                 });
