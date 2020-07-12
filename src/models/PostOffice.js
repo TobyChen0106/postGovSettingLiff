@@ -66,7 +66,6 @@ const PostOfficeSchema = new Schema({
     total: {
         type: Number,
     },
-
     number_plate_total:{
         type: Number,
     },
@@ -75,7 +74,6 @@ const PostOfficeSchema = new Schema({
     },
     number_plate_updateTime:{
         type: String,
-        default: (new Date()).toString()
     },
 })
 
