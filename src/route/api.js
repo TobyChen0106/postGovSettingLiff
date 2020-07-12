@@ -23,7 +23,7 @@ router.post('/setData', (req, res) => {
                 } else {
                     const time = new Date()
 
-                    if (req.body.now) {
+                    if (req.body.now !== undefined) {
                         postData.number_plate_now = req.body.now;
                         postData.number_plate_updateTime = time.toString();
                         postData.save().then(
@@ -37,7 +37,7 @@ router.post('/setData', (req, res) => {
                                 }
                             }
                         );
-                    } else if (req.body.total) {
+                    } else if (req.body.total !== undefined) {
                         postData.number_plate_total = req.body.total;
                         postData.number_plate_updateTime = time.toString();
                         postData.save().then(

@@ -65,7 +65,7 @@ export default function RecipeReviewCard() {
             <CardHeader
                 avatar={
                     <Avatar aria-label="recipe" src={postOffcieImage}>
-                        C
+                        郵
                     </Avatar>
                 }
                 action={
@@ -86,14 +86,14 @@ export default function RecipeReviewCard() {
                     1. 使用前請先至 Line Chatbot 對話框中輸入各郵局專屬密碼以進行綁定。
                 </Typography>
                 <Typography variant="body1" color="textSecondary" component="p">
-                    2. 確認所選擇
-                    
+                    2. 確認所選擇郵局正確無誤，並依據現場實際的叫號與號碼牌發放的情況來更新資料。
                 </Typography>
                 <Typography variant="body1" color="textSecondary" component="p">
-                    3. 依據現場實際的叫號與號碼牌發放的情況來更新資料: 點擊數字後可以使用下方按鈕進行資料輸入。
+                    3. 資料更新方式: 點選要更新的內容(目前叫號與以發放的號碼牌數量)後，使用下方按鈕進行資料輸入；或按下右邊的編輯鈕直接輸入數字編輯。
                 </Typography>
                 <Typography variant="body1" color="textSecondary" component="p">
-                    4. 問題回報: <a href="https://map.cardbo.info">https://map.cardbo.info</a>。
+                    4. 問題回報: 
+                    {/* <a href="https://map.cardbo.info">https://map.cardbo.info</a>。 */}
                 </Typography>
             </CardContent>
             <Link to="/">

@@ -26,6 +26,12 @@ import DoneIcon from '@material-ui/icons/Done';
 // Liff
 const liff = window.liff;
 
+const pad = (n, width, z) => {
+    z = z || '0';
+    n = n + '';
+    return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
+}
+
 const useStyles = (theme) => ({
     root: {
         width: "100vw",
@@ -143,9 +149,9 @@ class SetNumber extends Component {
 
             storeNm: "網際網路錯誤",
             storeCd: "網際網路錯誤",
-            inputBuffet: ""
+            inputBuffer: ""
         }
-        this.modalTextRef = React.createRef();
+        this.updateFlag = false;
     }
 
     componentWillMount = () => {
@@ -189,7 +195,6 @@ class SetNumber extends Component {
                             }
                         }
                     ).then((data) => {
-                        console.log(data)
                         if (data) {
                             var number_plate_updateTime = new Date(data.number_plate_updateTime);
                             this.setState(
@@ -210,50 +215,56 @@ class SetNumber extends Component {
                             );
                         }
                     });
+                    this.updateFlag = true;
                 } else {
                     alert("無法取得使用者ID!");
+                    this.createNotification("error", "無法載入資料", "請確認網路連線狀況");
                     this.setState(
                         { loading: false }
                     );
+                    this.updateFlag = true;
                 }
             }
         })
     }
 
     componentDidMount = () => {
-        // setInterval(() => {
-        //     if (this.state.lineID) {
-        //         fetch('/api/getData', {
-        //             method: 'POST',
-        //             body: JSON.stringify({ lineID: this.state.lineID }),
-        //             headers: new Headers({
-        //                 'Content-Type': 'application/json'
-        //             })
-        //         }).catch(function (error) {
-        //             console.log("[Error] " + error);
-        //         }).then(
-        //             res => {
-        //                 if (res.ok) {
-        //                     return res.json()
-        //                 }
-        //                 else {
-        //                     return null;
-        //                 }
-        //             }
-        //         ).then((data) => {
-        //             if (data) {
-        //                 var number_plate_updateTime = new Date(data.number_plate_updateTime);
-        //                 this.setState(
-        //                     {
-        //                         number_plate_updateTime: number_plate_updateTime,
-        //                         total: data.number_plate_total,
-        //                         now: data.number_plate_now,
-        //                     }
-        //                 );
-        //             }
-        //         });
-        //     }
-        // }, 1000);
+        setInterval(() => {
+            if (this.state.lineID && this.updateFlag) {
+                fetch('/api/getData', {
+                    method: 'POST',
+                    body: JSON.stringify({ lineID: this.state.lineID }),
+                    headers: new Headers({
+                        'Content-Type': 'application/json'
+                    })
+                }).catch(function (error) {
+                    console.log("[Error] " + error);
+                }).then(
+                    res => {
+                        if (res.ok) {
+                            console.log("ok")
+                            return res.json()
+                        }
+                        else {
+                            return null;
+                        }
+                    }
+                ).then((data) => {
+                    if (data) {
+                        var number_plate_updateTime = new Date(data.number_plate_updateTime);
+                        if (number_plate_updateTime !== this.state.number_plate_updateTime) {
+                            this.setState({ number_plate_updateTime: number_plate_updateTime })
+                        }
+                        if (data.number_plate_now !== this.state.now) {
+                            this.setState({ now: data.number_plate_now })
+                        }
+                        if (data.number_plate_total !== this.state.total) {
+                            this.setState({ total: data.number_plate_total })
+                        }
+                    }
+                });
+            }
+        }, 500);
     }
 
     createNotification = (type, title, message) => {
@@ -293,34 +304,44 @@ class SetNumber extends Component {
     }
 
     handleOpenModal = () => {
+        if (this.state.focusedData === 0) {
+            const now = this.state.now;
+            this.setState({ inputBuffer: now });
+        } else if (this.state.focusedData === 1) {
+            const total = this.state.total;
+            this.setState({ inputBuffer: total });
+        }
         this.setState({ openModal: true })
     }
 
     handleCloseModal = () => {
-        this.setState({ openModal: false, inputBuffet: null })
+        this.setState({ openModal: false })
     }
 
     handleModalChange = (e) => {
-        this.setState({ inputBuffet: e.target.value })
+        this.setState({ inputBuffer: e.target.value })
     }
 
-    handleModalSave = () => {
-        const newData = parseInt(this.state.inputBuffet);
-        if (!this.state.inputBuffet || !Number.isInteger(newData)) {
-            this.createNotification("error", "輸入非整數資料", "請確認輸入法");
+    handleModalSave = (e) => {
+        e.preventDefault();
+        const newData = parseInt(this.state.inputBuffer);
+        console.log(newData)
+        if (!Number.isInteger(newData)) {
+            this.createNotification("error", "非整數資料", "請確認輸入");
         } else {
-            this.handleCloseModal();
             if (this.state.focusedData === 0) {
                 this.setState(
                     { now: newData }, this.handleSave({ now: newData }));
             } else if (this.state.focusedData === 1) {
                 this.setState({ total: newData }, this.handleSave({ total: newData }));
             }
+            this.handleCloseModal();
         }
     }
 
     handleSave = (data) => {
-        if (data.now || data.total) {
+        if (data.now !== undefined || data.total !== undefined) {
+            this.updateFlag = false;
             if (this.state.focusedData === 0) {
                 const now = data.now;
                 this.setState(
@@ -345,13 +366,15 @@ class SetNumber extends Component {
                             }
                         ).then((data) => {
                             if (!data) {
-                                this.createNotification("error", "無法載入資料", "請確認網路連線狀況");
+                                this.createNotification("error", "無法寫入資料", "請確認網路連線狀況");
                             } else {
                                 if (data.number_plate_now !== now) {
-                                    this.createNotification("error", "無法載入資料", "請確認網路連線狀況");
+                                    this.createNotification("error", "無法寫入資料", "請確認網路連線狀況");
                                 }
                             }
+                        }).then(() => {
                             this.setState({ loadingSetNow: false });
+                            this.updateFlag = true;
                         })
                     }
                 );
@@ -378,17 +401,21 @@ class SetNumber extends Component {
                             }
                         ).then((data) => {
                             if (!data) {
-                                this.createNotification("error", "無法載入資料", "請確認網路連線狀況");
+                                this.createNotification("error", "無法寫入資料", "請確認網路連線狀況");
                             } else {
                                 if (data.number_plate_total !== total) {
-                                    this.createNotification("error", "無法載入資料", "請確認網路連線狀況");
+                                    this.createNotification("error", "無法寫入資料", "請確認網路連線狀況");
                                 }
                             }
+                        }).then(() => {
                             this.setState({ loadingSetTotal: false });
+                            this.updateFlag = true;
                         })
                     }
                 );
             }
+        } else {
+            this.createNotification("error", "無法寫入資料", "請確認網路連線狀況");
         }
     }
 
@@ -421,7 +448,7 @@ class SetNumber extends Component {
                             </IconButton>
                         }
                         title={this.state.storeNm}
-                        subheader={this.state.storeCd}
+                        subheader={`${this.state.number_plate_updateTime.getMonth() + 1}/${this.state.number_plate_updateTime.getDate()}  ${pad(this.state.number_plate_updateTime.getHours(), 2)}:${pad(this.state.number_plate_updateTime.getMinutes(), 2)} 更新`}
                     />
                     <div className={classes.CardContent}>
                         <div className={classes.SettingHolder}>
@@ -437,13 +464,13 @@ class SetNumber extends Component {
                                 </div>
                                 {this.state.loadingSetNow ? (
                                     <CircularProgress className={classes.CircularProgress} />) : (
-                                        <IconButton className={classes.IconButton} onClick={this.handleOpenModal}>
+                                        <IconButton className={classes.IconButton} onClick={this.handleOpenModal} disabled={this.state.focusedData === 1}>
                                             <EditIcon />
                                         </IconButton>
                                     )}
                             </div >
                             <div className={classes.Setting}
-                                style={this.state.focusedData === 0 ? notfocusStyle : focusStyle}
+                                style={this.state.focusedData === 1 ? focusStyle : notfocusStyle}
                                 onClick={e => this.handleChangeFocus(e, 1)}>
                                 發<br />放<br />號<br />碼
                                 <div className={classes.SettingText}>
@@ -451,7 +478,7 @@ class SetNumber extends Component {
                                 </div>
                                 {this.state.loadingSetTotal ?
                                     (<CircularProgress className={classes.CircularProgress} />) : (
-                                        <IconButton className={classes.IconButton} onClick={this.handleOpenModal}>
+                                        <IconButton className={classes.IconButton} onClick={this.handleOpenModal} disabled={this.state.focusedData === 0}>
                                             <EditIcon />
                                         </IconButton>
                                     )}
@@ -493,14 +520,13 @@ class SetNumber extends Component {
                         <div className={classes.modalTextFieldHolder}>
                             <TextField
                                 onChange={this.handleModalChange}
-                                ref={this.modalTextRef}
                                 className={classes.modalTextField}
                                 id="outlined-read-only-input"
                                 label={this.state.focusedData === 0 ? "現在叫號" : this.state.focusedData === 1 ? "發放號碼" : "資料錯誤"}
-                                defaultValue={this.state.focusedData === 0 ? this.state.now : this.state.focusedData === 1 ? this.state.total : "資料錯誤"}
+                                defaultValue={this.state.inputBuffer}
                                 variant="outlined"
                             />
-                            <IconButton className={classes.IconButton} style={{ color: "" }} onClick={this.handleModalSave}>
+                            <IconButton className={classes.IconButton} style={{ color: "" }} onClick={(e) => this.handleModalSave(e)}>
                                 <DoneIcon />
                             </IconButton>
                         </div>
