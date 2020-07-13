@@ -2,8 +2,6 @@ import React, { Component } from 'react';
 import { Link } from "react-router-dom";
 import { withStyles } from '@material-ui/core/styles';
 import ReactLoading from 'react-loading';
-
-
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import Avatar from '@material-ui/core/Avatar';
@@ -147,7 +145,7 @@ class SetNumber extends Component {
             openModal: false,
             lineID: undefined,
 
-            storeNm: "網際網路錯誤",
+            storeNm: "[錯誤] 請確認已事先註冊",
             storeCd: "網際網路錯誤",
             inputBuffer: ""
         }
@@ -209,9 +207,12 @@ class SetNumber extends Component {
                                 }
                             );
                         } else {
-                            this.createNotification("error", "無法載入資料", "請確認網路連線狀況");
                             this.setState(
-                                { lineID: profile.userId, loading: false }
+                                { lineID: profile.userId, loading: false }, () => {
+                                    setTimeout(() => {
+                                        this.createNotification("warning", "查無綁定資料", "請確認已事先註冊");
+                                    }, 500)
+                                }
                             );
                         }
                     });
@@ -276,7 +277,7 @@ class SetNumber extends Component {
                 NotificationManager.success(message, title, 2000);
                 break;
             case 'warning':
-                NotificationManager.warning(message, title, 2000, () => { this.getUserLocation(); });
+                NotificationManager.warning(message, title, 200000);
                 break;
             case 'error':
                 NotificationManager.error(message, title, 2000);
@@ -531,7 +532,6 @@ class SetNumber extends Component {
                                 <DoneIcon />
                             </IconButton>
                         </div>
-
                     </Modal>
                     <NotificationContainer />
                 </Card >
