@@ -136,7 +136,7 @@ class SetNumber extends Component {
             loadingSetTotal: false,
             now: 0,
             total: 0,
-
+            number_plate_updateTime: new Date(),
             focusedMark: undefined,
             fetchData: false,
 
@@ -173,7 +173,7 @@ class SetNumber extends Component {
                 console.log("USER PROFILE ERROR!");
                 this.createNotification("error", "無法載入資料", "請確認網路連線狀況");
             } else {
-                console.log(profile.userId);
+                // console.log(profile.userId);
                 if (profile.userId) {
                     fetch('/api/getData', {
                         method: 'POST',
@@ -230,7 +230,7 @@ class SetNumber extends Component {
 
     componentDidMount = () => {
         setInterval(() => {
-            if (this.state.lineID && this.updateFlag) {
+            if (this.state.lineID && this.updateFlag && !this.state.loading) {
                 fetch('/api/getData', {
                     method: 'POST',
                     body: JSON.stringify({ lineID: this.state.lineID }),
@@ -264,7 +264,7 @@ class SetNumber extends Component {
                     }
                 });
             }
-        }, 500);
+        }, 5000);
     }
 
     createNotification = (type, title, message) => {
@@ -429,6 +429,7 @@ class SetNumber extends Component {
             return (
                 <div className={classes.loading}>
                     <ReactLoading type={'cubes'} color={'#ffffff'} height={'90vw'} width={'90vw'} />
+                    <NotificationContainer />
                 </div>
             );
         }
